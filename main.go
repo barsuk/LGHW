@@ -1,3 +1,4 @@
+// here let's reproduce by go the exercise from the book "The theory of calculation for programmers" by Tom Stuart
 package main
 
 import "fmt"
