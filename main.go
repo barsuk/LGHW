@@ -3,11 +3,15 @@ package main
 import "fmt"
 
 type R interface {
-	reduce() interface{}
+	Reduce() interface{}
 }
 
 type Num struct {
 	Value int
+}
+
+func (n Num) String() string {
+	return fmt.Sprintf("%d", n)
 }
 
 type Add struct {
@@ -15,8 +19,34 @@ type Add struct {
 	Right interface{}
 }
 
+func (a Add) String() string {
+	return fmt.Sprintf("%d + %d", a.Left, a.Right)
+}
+
+func (a Add) Reduce() interface{} {
+	if l, ok := a.Left.(R); ok {
+		return Add{
+			l.Reduce(),
+			a.Right,
+		}
+	} else if r, ok := a.Right.(R); ok {
+		return Add{
+			a.Left,
+			r.Reduce(),
+		}
+	} else {
+		return Num{
+			a.Left.(Num).Value + a.Right.(Num).Value,
+		}
+	}
+}
+
 type Boolean struct {
 	Value bool
+}
+
+func (b Boolean) String() string {
+	return fmt.Sprintf("%t", b.Value)
 }
 
 type LessThan struct {
@@ -24,57 +54,60 @@ type LessThan struct {
 	Right interface{}
 }
 
-func (a *Add) reduce() interface{} {
-	if left, ok := (a.Left).(R); ok {
-		return Add{ left.reduce(), a.Right, }
-	} else if right, ok := (a.Right).(R); ok {
-		return Add{ a.Left, right.reduce(), }
-	} else {
-		return Num{ a.Left.(int) + a.Right.(int) }
-	}
+func (lt LessThan) String() string {
+	return fmt.Sprintf("%d < %d", lt.Left, lt.Right)
 }
 
-func (lt *LessThan) reduce() interface{} {
-	if left, ok := (lt.Left).(R); ok {
-		return LessThan{ left.reduce(), lt.Right, }
-	} else if right, ok := (lt.Right).(R); ok {
-		return LessThan{ lt.Left, right.reduce(), }
+func (lt LessThan) Reduce() interface{} {
+	if l, ok := lt.Left.(R); ok {
+		return LessThan{
+			l.Reduce(),
+			lt.Right,
+		}
+	} else if r, ok := lt.Right.(R); ok {
+		return LessThan{
+			lt.Left,
+			r.Reduce(),
+		}
 	} else {
-		return Boolean{ lt.Left.(int) < lt.Right.(int) }
+		return Boolean{
+			int(lt.Left.(Num).Value) < int(lt.Right.(Num).Value),
+		}
 	}
 }
 
 type Machine struct {
-	Expr interface{}
+	Expr *interface{}
 }
 
 func (m *Machine) step() {
-	t := m.Expr.(R)
-	m.Expr = t.reduce()
+	var res interface{}
+	expr := *m.Expr
+	fmt.Printf("BEFORE %s\n", expr)
+	if e, ok := expr.(R); ok {
+		res = e.Reduce()
+	}
+	fmt.Printf("AFTER %s\n", res)
+	m.Expr = &res
 }
 
-func (m *Machine) run() {
-	_, ok := (m.Expr).(R)
-	for {
-		fmt.Println(m.Expr)
+func (m Machine) run() {
+	var check bool
+	for _, check = (*m.Expr).(R); check; {
 		m.step()
-
-		_, ok = (m.Expr).(R)
-		if !ok {
-			break
-		}
+		_, check = (*m.Expr).(R)
 	}
-	fmt.Println("last")
-	fmt.Println(m.Expr)
 }
 
 func main() {
 	fmt.Println("hola, el mundo")
-	m := &Machine{
-		&LessThan{
-			&Add{1,3},
-			3,
-		},
+
+	var expr interface{}
+	expr = LessThan{
+		Left: Add{Num{1},Num{3},},
+		Right: Num{3,},
 	}
+
+	m := Machine{ &expr, }
 	m.run()
 }
