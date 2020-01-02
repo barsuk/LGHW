@@ -83,7 +83,7 @@ type Machine struct {
 func (m *Machine) step() {
 	var res interface{}
 	expr := *m.Expr
-	fmt.Printf("STEP %s\n", expr)
+	fmt.Printf("BEFORE %s\n", expr)
 	if e, ok := expr.(R); ok {
 		res = e.Reduce()
 	}
@@ -96,19 +96,7 @@ func (m Machine) run() {
 		m.step()
 		_, check = (*m.Expr).(R)
 	}
-	fmt.Printf("END WITH %s\n", *m.Expr)
-}
-
-type Variable struct {
-	Name string
-}
-
-func (v Variable) String() string {
-	return fmt.Sprintf("%s", v.Name)
-}
-
-func (v Variable) Reduce(env map[string]interface{}) interface{} {
-	return env[v.Name]
+	fmt.Printf("AFTER %s\n", *m.Expr)
 }
 
 func main() {
