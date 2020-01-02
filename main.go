@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 type R interface {
-	Reduce() interface{}
+	Reduce(env map[string]interface{}) interface{}
 }
 
 type Num struct {
@@ -20,19 +20,20 @@ type Add struct {
 }
 
 func (a Add) String() string {
-	return fmt.Sprintf("%d + %d", a.Left, a.Right)
+	//return fmt.Sprintf("%d + %d", a.Left, a.Right)
+	return fmt.Sprintf("%v + %v", a.Left, a.Right)
 }
 
-func (a Add) Reduce() interface{} {
+func (a Add) Reduce(env map[string]interface{}) interface{} {
 	if l, ok := a.Left.(R); ok {
 		return Add{
-			l.Reduce(),
+			l.Reduce(env),
 			a.Right,
 		}
 	} else if r, ok := a.Right.(R); ok {
 		return Add{
 			a.Left,
-			r.Reduce(),
+			r.Reduce(env),
 		}
 	} else {
 		return Num{
@@ -55,19 +56,19 @@ type LessThan struct {
 }
 
 func (lt LessThan) String() string {
-	return fmt.Sprintf("%d < %d", lt.Left, lt.Right)
+	return fmt.Sprintf("%v < %v", lt.Left, lt.Right)
 }
 
-func (lt LessThan) Reduce() interface{} {
+func (lt LessThan) Reduce(env map[string]interface{}) interface{} {
 	if l, ok := lt.Left.(R); ok {
 		return LessThan{
-			l.Reduce(),
+			l.Reduce(env),
 			lt.Right,
 		}
 	} else if r, ok := lt.Right.(R); ok {
 		return LessThan{
 			lt.Left,
-			r.Reduce(),
+			r.Reduce(env),
 		}
 	} else {
 		return Boolean{
@@ -78,14 +79,15 @@ func (lt LessThan) Reduce() interface{} {
 
 type Machine struct {
 	Expr *interface{}
+	Env map[string]interface{}
 }
 
-func (m *Machine) step() {
+func (m *Machine) step(env map[string]interface{}) {
 	var res interface{}
 	expr := *m.Expr
 	fmt.Printf("STEP %s\n", expr)
 	if e, ok := expr.(R); ok {
-		res = e.Reduce()
+		res = e.Reduce(env)
 	}
 	m.Expr = &res
 }
@@ -93,7 +95,7 @@ func (m *Machine) step() {
 func (m Machine) run() {
 	var check bool
 	for _, check = (*m.Expr).(R); check; {
-		m.step()
+		m.step(m.Env)
 		_, check = (*m.Expr).(R)
 	}
 	fmt.Printf("END WITH %s\n", *m.Expr)
@@ -104,7 +106,7 @@ type Variable struct {
 }
 
 func (v Variable) String() string {
-	return fmt.Sprintf("%s", v.Name)
+	return fmt.Sprintf("%v", v.Name)
 }
 
 func (v Variable) Reduce(env map[string]interface{}) interface{} {
@@ -120,7 +122,7 @@ func main() {
 		Right: Num{3,},
 	}
 
-	m := Machine{ &expr, }
+	m := Machine{ &expr, nil}
 	m.run()
 
 	//
@@ -129,7 +131,7 @@ func main() {
 		Right: Add{Num{4},Num{5},},
 	}
 
-	m = Machine{ &expr, }
+	m = Machine{ &expr, nil}
 	m.run()
 
 	//
@@ -137,12 +139,31 @@ func main() {
 		Left: Add{Num{1},Num{3},},
 		Right: Add{
 			Add{
-				Num{8},Num{0},
+				Variable{"x"},Num{0},
 			},
-			Num{5},
+			Variable{"y"},
 		},
 	}
 
-	m = Machine{ &expr, }
+	m = Machine{ &expr, map[string]interface{}{
+		"x": Num{3},
+		"y": Num{4},
+	},}
+	m.run()
+
+	//
+	expr = LessThan{
+		Left: Add{Num{1},Num{3},},
+		Right: Add{
+			Add{
+				Variable{"x"},Num{0},
+			},
+			Variable{"y"},
+		},
+	}
+	m = Machine{ &expr, map[string]interface{}{
+		"x": Num{3},
+		"y": Add{Num{8},Num{7},},
+	},}
 	m.run()
 }
