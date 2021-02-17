@@ -65,3 +65,23 @@ func (nfa *NFA) readString(str string) {
 		nfa.readCharacter(string(char))
 	}
 }
+
+type Design struct {
+	StartState int
+	AcceptStates []int
+	RuleBook RuleBook
+}
+
+func (n *Design) toNFA() NFA {
+	return NFA{
+		CurrentStates: map[int]bool{n.StartState: false},
+		AcceptStates: n.AcceptStates,
+		RuleBook:     n.RuleBook,
+	}
+}
+
+func (n *Design) accepts(str string) bool {
+	nfa := n.toNFA()
+	nfa.readString(str)
+	return nfa.accepting()
+}

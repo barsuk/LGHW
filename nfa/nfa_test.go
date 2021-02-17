@@ -18,7 +18,7 @@ var rulebook = RuleBook{Rules: []dka.FARule{
 	{3, "b", 4},
 }}
 
-func TestDesign(t *testing.T) {
+func TestNFARulebook(t *testing.T) {
 	fmt.Println(rulebook.nextStates(map[int]bool{1: false}, "b"))
 	fmt.Println(rulebook.nextStates(map[int]bool{1: false, 2: false}, "a"))
 	fmt.Println(rulebook.nextStates(map[int]bool{1: false, 3: false}, "b"))
@@ -59,4 +59,19 @@ func TestStrReading(t *testing.T) {
 	str := "bbbbb"
 	nfa.readString(str)
 	fmt.Printf("str: %s. Accepting? %t\n", str, nfa.accepting())
+}
+
+func TestDesign(t *testing.T) {
+	nfades := Design{
+		StartState: 1,
+		AcceptStates: []int{4},
+		RuleBook:     rulebook,
+	}
+	for _, c := range []string{
+		"bab",
+		"bbbbb",
+		"bbabb",
+	} {
+		fmt.Printf("str: %s, accepted: %t\n", c, nfades.accepts(c))
+	}
 }
