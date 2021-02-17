@@ -1,4 +1,4 @@
-package main
+package oldmain
 
 import "fmt"
 
@@ -104,33 +104,33 @@ func main() {
 
 	var expr interface{}
 	expr = LessThan{
-		Left: Add{Num{1},Num{3},},
+		Left:  Add{Num{1}, Num{3},},
 		Right: Num{3,},
 	}
 
-	m := Machine{ &expr, }
+	m := Machine{&expr, }
 	m.run()
 
 	//
 	expr = LessThan{
-		Left: Add{Num{1},Num{3},},
-		Right: Add{Num{4},Num{5},},
+		Left:  Add{Num{1}, Num{3},},
+		Right: Add{Num{4}, Num{5},},
 	}
 
-	m = Machine{ &expr, }
+	m = Machine{&expr, }
 	m.run()
 
 	//
 	expr = LessThan{
-		Left: Add{Num{1},Num{3},},
+		Left: Add{Num{1}, Num{3},},
 		Right: Add{
 			Add{
-				Num{8},Num{0},
+				Num{8}, Num{0},
 			},
 			Num{5},
 		},
 	}
 
-	m = Machine{ &expr, }
+	m = Machine{&expr, }
 	m.run()
 }

@@ -8,11 +8,11 @@ type FARule struct {
 	NextState int
 }
 
-func (rule FARule) appliesTo(state int, character string) bool {
+func (rule FARule) AppliesTo(state int, character string) bool {
 	return rule.State == state && rule.Character == character
 }
 
-func (rule FARule) follow() int {
+func (rule FARule) Follow() int {
 	return rule.NextState
 }
 
@@ -25,12 +25,12 @@ type DFARuleBook struct {
 }
 
 func (b DFARuleBook) nextState(state int, character string) int {
-	return b.ruleFor(state, character).follow()
+	return b.ruleFor(state, character).Follow()
 }
 
 func (b DFARuleBook) ruleFor(state int, character string) FARule {
 	for _, rule := range b.Rules {
-		if rule.appliesTo(state, character) {
+		if rule.AppliesTo(state, character) {
 			return rule
 		}
 	}
@@ -53,15 +53,35 @@ func (dfa *DFA) accepting() bool {
 }
 
 func (dfa *DFA) readCharacter(character string) {
-	fmt.Printf("BEFORE cur st: %d\n", dfa.CurrentState)
+	//fmt.Printf("BEFORE cur st: %d\n", dfa.CurrentState)
 	dfa.CurrentState = dfa.RuleBook.nextState(dfa.CurrentState, character)
-	fmt.Printf("AFTER cur st: %d\n", dfa.CurrentState)
+	//fmt.Printf("AFTER cur st: %d\n", dfa.CurrentState)
 }
 
 func (dfa *DFA) readString(str string) {
-	fmt.Printf("reading string: %q\n", str)
+	//fmt.Printf("reading string: %q\n", str)
 	for _, v := range str {
-		fmt.Printf("char: %d, %s\n", v, string(v))
+		//fmt.Printf("char: %d, %s\n", v, string(v))
 		dfa.readCharacter(string(v))
 	}
+}
+
+type DFADesign struct {
+	StartState int
+	AcceptStates []int
+	RuleBook DFARuleBook
+}
+
+func (d *DFADesign) toDFA() DFA {
+	return DFA{
+		CurrentState: d.StartState,
+		AcceptStates: d.AcceptStates,
+		RuleBook:     d.RuleBook,
+	}
+}
+
+func (d *DFADesign) accepts(str string) bool {
+	dfa := d.toDFA()
+	dfa.readString(str)
+	return dfa.accepting()
 }
